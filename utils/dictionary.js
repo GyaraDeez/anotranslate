@@ -41,6 +41,15 @@ const dictionary = {
   "walk": "hoda",
   "live": "nari",
   "stay": "nari",
+  "have": "nai",
+  "has": "nai",
+  "had": "nai",
+  "is": "nai",
+  "are": "nai",
+  "was": "nai",
+  "were": "nai",
+  "does": "nai",
+  "do": "kora",
 
   // Adjectives & Qualities
   "good": "dee",
@@ -116,6 +125,8 @@ const dictionary = {
   "surely": "ya",
   "question": "na",
   "not": "ta",
+  "no": "ta",
+  "yes": "ya",
   "as for": "kae",
   "in": "ni",
   "at": "ni",
@@ -137,7 +148,6 @@ const dictionary = {
   "airport": "palo",
   "boat": "nara",
   "bicycle": "sikae",
-  "road": "hinae",
   "street": "hinae",
   "station": "stena",
   "ticket": "tika",
@@ -165,7 +175,6 @@ const dictionary = {
   "hat": "hata",
   "coat": "kota",
   "dress": "dresa",
-  "bag": "paka",
   "belt": "belta",
   "watch": "wacha",
   "glasses": "glasi",
@@ -186,7 +195,6 @@ const dictionary = {
   "cat": "kati",
   "dog": "doga",
   "bird": "bira",
-  "fish": "kema",
   "cow": "kowa",
   "horse": "horsi",
   "lion": "liona",
@@ -194,8 +202,7 @@ const dictionary = {
   "bear": "bera",
   "wolf": "wolfa",
 
-  // Batch 7: Food & Drink (expanded)
-  "water": "nima",
+  // Batch 7: Food & Drink
   "tea": "tia",
   "coffee": "kofi",
   "milk": "mila",
@@ -204,14 +211,10 @@ const dictionary = {
   "butter": "buta",
   "soup": "supa",
   "vegetable": "vega",
-  "meat": "naku",
 
   // Batch 8: Nature & Geography
-  "mountain": "tala",
-  "river": "dari",
   "lake": "laka",
   "ocean": "nami",
-  "forest": "rama",
   "desert": "desa",
   "island": "aila",
   "valley": "vala",
@@ -219,8 +222,6 @@ const dictionary = {
   "cave": "kava",
 
   // Batch 9: Emotions & States
-  "happy": "lemi",
-  "sad": "nuna",
   "angry": "karae",
   "scared": "suni",
   "tired": "tori",
@@ -242,5 +243,3 @@ const dictionary = {
   "kitchen": "kita",
   "bathroom": "bata"
 };
-
-export default dictionary;
