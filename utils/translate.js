@@ -1,6 +1,6 @@
 import { engToAno, anoToEng } from "./dictionary";
 
-// Optional: basic adjectives (we won't swap yet to keep it safe)
+// List of adjectives in English (must match dictionary)
 const adjectives = ["big", "small", "good", "bad"];
 
 export function englishToAnorcan(sentence) {
@@ -12,6 +12,17 @@ export function englishToAnorcan(sentence) {
   // Convert each word using dictionary
   let converted = words.map((w) => engToAno[w] || w);
 
+  // Move adjectives after nouns
+  for (let i = 0; i < converted.length - 1; i++) {
+    const engWord = Object.keys(engToAno).find((k) => engToAno[k] === converted[i]);
+    const engNext = Object.keys(engToAno).find((k) => engToAno[k] === converted[i + 1]);
+    if (adjectives.includes(engWord) && engNext && !adjectives.includes(engNext)) {
+      // Swap adjective with noun
+      [converted[i], converted[i + 1]] = [converted[i + 1], converted[i]];
+      i++; // skip next to avoid double swap
+    }
+  }
+
   // Apply simple VSO: if at least 3 words, swap first two (SVO → VSO)
   if (converted.length >= 3) {
     const [subj, verb, ...obj] = converted;
@@ -20,7 +31,7 @@ export function englishToAnorcan(sentence) {
     }
   }
 
-  // Add "na" if the sentence was a question
+  // Add "na" if sentence was a question
   if (sentence.trim().endsWith("?")) {
     converted.push("na");
   }
@@ -46,7 +57,7 @@ export function anorcanToEnglish(sentence) {
     }
   }
 
-  // VSO → SVO
+  // SVO restoration from VSO
   if (converted.length >= 3) {
     const [verb, subj, ...obj] = converted;
     if (anoToEng[verb]) {
