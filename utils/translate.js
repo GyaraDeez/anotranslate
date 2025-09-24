@@ -1,7 +1,12 @@
 // utils/translate.js
-import { engToAno, anoToEng } from "./dictionary";
+import dictionary from "./dictionary";
 
-// Grammar particles for reference
+// Build reverse dictionary for Anorcan → English
+const anoToEng = Object.fromEntries(
+  Object.entries(dictionary).map(([k, v]) => [v, k])
+);
+
+// Grammar particles
 const particles = ["na", "ta", "ya", "kae", "ni", "de", "sa", "ma", "to", "ku"];
 
 /**
@@ -15,21 +20,19 @@ export function englishToAnorcan(sentence) {
   // Lowercase & remove punctuation
   let words = sentence.toLowerCase().replace(/[?!.]/g, "").split(/\s+/);
 
-  // Convert each word using dictionary
+  // Convert words using dictionary
   let converted = words
     .map((w) => {
-      const translation = engToAno[w];
+      const translation = dictionary[w] || dictionary[w.toLowerCase()];
       if (!translation) return w;
       return translation.includes(" ") ? translation.split(" ") : translation;
     })
     .flat();
 
-  // VSO: If 3+ words, swap first two (SVO → VSO)
+  // VSO: swap first two words if sentence has >=3 words
   if (converted.length >= 3) {
     const [subj, verb, ...obj] = converted;
-    if (engToAno[verb]) {
-      converted = [verb, subj, ...obj];
-    }
+    if (dictionary[verb]) converted = [verb, subj, ...obj];
   }
 
   // Add question marker "na" if sentence ends with "?"
@@ -50,32 +53,28 @@ export function anorcanToEnglish(sentence) {
 
   let words = sentence.toLowerCase().replace(/[?!.]/g, "").split(/\s+/);
 
-  // Remove question marker "na" at the end
+  // Remove question marker at end
   if (words[words.length - 1] === "na") words.pop();
 
   let converted = [];
   for (let i = 0; i < words.length; i++) {
-    // Multi-word translation: "tafi rak" → "love"
+    // Multi-word "tafi rak" → "love"
     if (words[i] === "tafi" && words[i + 1] === "rak") {
       converted.push("love");
-      i++; // skip next
+      i++;
     } 
-    // Keep particles as-is
     else if (particles.includes(words[i])) {
       converted.push(words[i]);
     } 
-    // Lookup in dictionary
     else {
       converted.push(anoToEng[words[i]] || words[i]);
     }
   }
 
-  // Restore SVO if sentence has 3+ words (VSO → SVO)
+  // Restore SVO from VSO if sentence >=3 words
   if (converted.length >= 3) {
     const [verb, subj, ...obj] = converted;
-    if (anoToEng[verb] && !particles.includes(verb)) {
-      converted = [subj, verb, ...obj];
-    }
+    if (anoToEng[verb] && !particles.includes(verb)) converted = [subj, verb, ...obj];
   }
 
   return converted.join(" ");
