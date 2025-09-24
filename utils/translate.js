@@ -1,41 +1,68 @@
 // utils/translate.js
 import dictionary from "./dictionary";
 
-// Build reverse dictionary for Anorcan → English
-const anoToEng = Object.fromEntries(
-  Object.entries(dictionary).map(([k, v]) => [v, k])
-);
+// List of adjectives (for noun-adjective swap)
+const adjectives = [
+  "big","small","good","bad","new","old","hot","cold","long","short",
+  "strong","weak","peaceful","happy","sad","hard","soft","more"
+];
 
 // Grammar particles
 const particles = ["na", "ta", "ya", "kae", "ni", "de", "sa", "ma", "to", "ku"];
 
+// Extract English words for plural checks
+const nouns = Object.keys(dictionary).filter(
+  (k) => !["na","ta","ya","kae","ni","de","sa","ma","to","ku"].includes(k)
+);
+
 /**
  * Translate English → Anorcan
- * @param {string} sentence - English sentence
- * @returns {string} - Anorcan translation
+ * @param {string} sentence
+ * @returns {string}
  */
 export function englishToAnorcan(sentence) {
   if (!sentence) return "";
 
-  // Lowercase & remove punctuation
   let words = sentence.toLowerCase().replace(/[?!.]/g, "").split(/\s+/);
 
-  // Convert words using dictionary
   let converted = words
     .map((w) => {
-      const translation = dictionary[w] || dictionary[w.toLowerCase()];
+      let base = w;
+
+      // Strip plural 's' for nouns if base exists
+      if (w.endsWith("s") && nouns.includes(w.slice(0, -1))) {
+        base = w.slice(0, -1);
+      }
+      // Strip 's' for 3rd person singular verbs if base exists
+      else if (w.endsWith("s") && dictionary[w.slice(0, -1)]) {
+        base = w.slice(0, -1);
+      }
+
+      const translation = dictionary[base] || dictionary[base.toLowerCase()];
       if (!translation) return w;
       return translation.includes(" ") ? translation.split(" ") : translation;
     })
     .flat();
 
-  // VSO: swap first two words if sentence has >=3 words
-  if (converted.length >= 3) {
-    const [subj, verb, ...obj] = converted;
-    if (dictionary[verb]) converted = [verb, subj, ...obj];
+  // Move adjectives after nouns
+  for (let i = 0; i < converted.length - 1; i++) {
+    const engWord = Object.keys(dictionary).find((k) => dictionary[k] === converted[i]);
+    const engNext = Object.keys(dictionary).find((k) => dictionary[k] === converted[i + 1]);
+    if (adjectives.includes(engWord) && engNext && !adjectives.includes(engNext)) {
+      [converted[i], converted[i + 1]] = [converted[i + 1], converted[i]];
+      i++;
+    }
   }
 
-  // Add question marker "na" if sentence ends with "?"
+  // VSO: if sentence has 3+ words
+  if (converted.length >= 3) {
+    const [subj, verb, ...obj] = converted;
+    if (dictionary[verb]) {
+      converted = [verb, subj, ...obj];
+    }
+  }
+
+  // Add question marker
   if (sentence.trim().endsWith("?") && !converted.includes("na")) {
     converted.push("na");
   }
@@ -45,36 +72,39 @@ export function englishToAnorcan(sentence) {
 
 /**
  * Translate Anorcan → English
- * @param {string} sentence - Anorcan sentence
- * @returns {string} - English translation
+ * @param {string} sentence
+ * @returns {string}
  */
 export function anorcanToEnglish(sentence) {
   if (!sentence) return "";
 
   let words = sentence.toLowerCase().replace(/[?!.]/g, "").split(/\s+/);
 
-  // Remove question marker at end
+  // Remove question marker
   if (words[words.length - 1] === "na") words.pop();
 
   let converted = [];
   for (let i = 0; i < words.length; i++) {
-    // Multi-word "tafi rak" → "love"
+    // Multi-word: "tafi rak" → "love"
     if (words[i] === "tafi" && words[i + 1] === "rak") {
       converted.push("love");
       i++;
     } 
+    // Keep particles as-is
     else if (particles.includes(words[i])) {
       converted.push(words[i]);
     } 
     else {
-      converted.push(anoToEng[words[i]] || words[i]);
+      converted.push(Object.keys(dictionary).find(k => dictionary[k] === words[i]) || words[i]);
     }
   }
 
-  // Restore SVO from VSO if sentence >=3 words
+  // Restore SVO from VSO if sentence has 3+ words
   if (converted.length >= 3) {
     const [verb, subj, ...obj] = converted;
-    if (anoToEng[verb] && !particles.includes(verb)) converted = [subj, verb, ...obj];
+    if (!particles.includes(verb)) {
+      converted = [subj, verb, ...obj];
+    }
   }
 
   return converted.join(" ");
