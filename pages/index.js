@@ -1,28 +1,16 @@
 import { useState } from "react";
-import { engToAno, anoToEng } from "../utils/dictionary";
+import { englishToAnorcan, anorcanToEnglish } from "../utils/translate";
 
 export default function Home() {
   const [english, setEnglish] = useState("");
   const [anorcan, setAnorcan] = useState("");
 
-  // Simple word-for-word translator
-  const translateEngToAno = () => {
-    const words = english.toLowerCase().split(/\s+/);
-    const translated = words.map(w => engToAno[w] || w).join(" ");
-    setAnorcan(translated);
-  };
-
-  const translateAnoToEng = () => {
-    const words = anorcan.toLowerCase().split(/\s+/);
-    const translated = words.map(w => anoToEng[w] || w).join(" ");
-    setEnglish(translated);
-  };
-
   return (
     <div style={{ fontFamily: "sans-serif", padding: "2rem" }}>
       <h1>Anorcan ↔ English Translator</h1>
+
       <div style={{ display: "flex", gap: "2rem" }}>
-        {/* English input */}
+        {/* English */}
         <div style={{ flex: 1 }}>
           <h2>English</h2>
           <textarea
@@ -33,7 +21,7 @@ export default function Home() {
           />
         </div>
 
-        {/* Anorcan input */}
+        {/* Anorcan */}
         <div style={{ flex: 1 }}>
           <h2>Anorcan</h2>
           <textarea
@@ -46,10 +34,18 @@ export default function Home() {
       </div>
 
       <div style={{ marginTop: "1rem" }}>
-        <button onClick={translateEngToAno} style={{ marginRight: "1rem" }}>
+        <button
+          onClick={() => setAnorcan(englishToAnorcan(english))}
+          style={{ marginRight: "1rem" }}
+        >
           English → Anorcan
         </button>
-        <button onClick={translateAnoToEng}>Anorcan → English</button>
+
+        <button
+          onClick={() => setEnglish(anorcanToEnglish(anorcan))}
+        >
+          Anorcan → English
+        </button>
       </div>
     </div>
   );
