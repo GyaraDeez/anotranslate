@@ -1,3 +1,4 @@
+// dictionary.js
 const dictionary = {
   // Pronouns & Demonstratives
   "I": "ima",
@@ -49,7 +50,6 @@ const dictionary = {
   "was": "nai",
   "were": "nai",
   "does": "nai",
-  "do": "kora",
 
   // Adjectives & Qualities
   "good": "dee",
@@ -90,6 +90,13 @@ const dictionary = {
   "rain": "sani",
   "forest": "rama",
   "tree": "lama",
+  "lake": "laka",
+  "ocean": "nami",
+  "desert": "desa",
+  "island": "aila",
+  "valley": "vala",
+  "beach": "bicha",
+  "cave": "kava",
 
   // Objects & Everyday Things
   "house": "koro",
@@ -107,6 +114,16 @@ const dictionary = {
   "paper": "kami",
   "book": "soku",
   "road": "hinae",
+  "chair": "chara",
+  "table": "taba",
+  "bed": "beda",
+  "door": "dora",
+  "window": "wina",
+  "floor": "flora",
+  "wall": "wala",
+  "roof": "rofa",
+  "kitchen": "kita",
+  "bathroom": "bata",
 
   // Numbers
   "one": "en",
@@ -212,15 +229,6 @@ const dictionary = {
   "soup": "supa",
   "vegetable": "vega",
 
-  // Batch 8: Nature & Geography
-  "lake": "laka",
-  "ocean": "nami",
-  "desert": "desa",
-  "island": "aila",
-  "valley": "vala",
-  "beach": "bicha",
-  "cave": "kava",
-
   // Batch 9: Emotions & States
   "angry": "karae",
   "scared": "suni",
@@ -229,17 +237,7 @@ const dictionary = {
   "thirsty": "numa",
   "excited": "sufa",
   "bored": "bora",
-  "confused": "rasae",
-
-  // Batch 10: Household & Everyday
-  "chair": "chara",
-  "table": "taba",
-  "bed": "beda",
-  "door": "dora",
-  "window": "wina",
-  "floor": "flora",
-  "wall": "wala",
-  "roof": "rofa",
-  "kitchen": "kita",
-  "bathroom": "bata"
+  "confused": "rasae"
 };
+
+export default dictionary;
