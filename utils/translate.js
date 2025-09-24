@@ -8,7 +8,7 @@ const particles = ["na", "ta", "ya", "kae", "ni", "de", "sa", "ma", "to", "ku"];
 const verbs = [
   "be","exist","like","love","eat","drink","go","come","do","make",
   "want","need","give","take","say","speak","know","see","hear",
-  "sleep","think","feel","walk","live","stay"
+  "sleep","think","feel","walk","live","stay","have","has","had","is","are","was","were","do","does"
 ];
 
 // List of adjectives (for noun-adjective order)
@@ -16,6 +16,9 @@ const adjectives = [
   "big","small","good","bad","new","old","hot","cold","long","short",
   "many","few","strong","weak","peaceful","happy","sad","hard","soft","more"
 ];
+
+// List of words to omit (articles)
+const omitWords = ["the", "a", "an"];
 
 /**
  * Translate English → Anorcan
@@ -29,12 +32,18 @@ export function englishToAnorcan(sentence) {
 
   // Convert each word using dictionary, flatten multi-word translations
   let converted = words
+    .filter(w => !omitWords.includes(w)) // omit articles
     .map((w) => {
       // Normalize 3rd person singular: likes → like, eats → eat
       let base = w;
       if (base.endsWith("s") && verbs.includes(base.slice(0, -1))) {
         base = base.slice(0, -1);
       }
+      // Normalize auxiliary verbs
+      if (["has","have","had","does","do","is","are","was","were"].includes(base)) {
+        base = "be"; // map auxiliaries to 'be' for simplicity
+      }
+
       const translation = dictionary[base] || base;
       return translation.includes(" ") ? translation.split(" ") : translation;
     })
@@ -46,7 +55,7 @@ export function englishToAnorcan(sentence) {
     const engNext = Object.keys(dictionary).find(k => dictionary[k] === converted[i + 1]);
     if (adjectives.includes(engWord) && engNext && !adjectives.includes(engNext)) {
       [converted[i], converted[i + 1]] = [converted[i + 1], converted[i]];
-      i++; // skip next to avoid double swap
+      i++;
     }
   }
 
@@ -95,7 +104,11 @@ export function anorcanToEnglish(sentence) {
     } 
     else {
       const eng = Object.keys(dictionary).find(k => dictionary[k] === words[i]);
-      converted.push(eng || words[i]);
+      if (eng) {
+        converted.push(eng);
+      } else {
+        converted.push(words[i]);
+      }
     }
   }
 
