@@ -11,4 +11,8 @@
     "react": "latest",
     "react-dom": "latest"
   }
+  {
+  "type": "module"
+  }
+
 }
