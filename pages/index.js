@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { engToAno, anoToEng } from "../utils/dictionary";
 import { englishToAnorcan, anorcanToEnglish } from "../utils/translate";
+
 
 export default function Home() {
   const [english, setEnglish] = useState("");
