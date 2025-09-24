@@ -1,24 +1,17 @@
-import { engToAno, anoToEng } from "./dictionary";
-
-// List of adjectives (optional, currently not used to preserve round-trip order)
-const adjectives = [
-  "big","small","good","bad","new","old","hot","cold","long","short",
-  "strong","weak","peaceful","happy","sad","hard","soft","light","heavy",
-  "bright","dark","thick","thin","sharp","round","flat","smooth"
-];
+// utils/translate.js
 
 // Grammar particles
 const particles = ["na","ta","ya","kae","ni","de","sa","ma","to","ku"];
 
 /**
- * Translate English sentence to Anorcan
- * Handles:
- * - Multi-word translations (like "love" → "tafi rak")
- * - VSO order (verbs before subject)
- * - Negation "ta" before verbs
- * - Question marker "na"
+ * English → Anorcan translation
+ * @param {string} sentence - English sentence
+ * @param {object} engToAno - Loaded dictionary object
+ * @returns {string} Anorcan translation
  */
-export function englishToAnorcan(sentence) {
+export function englishToAnorcan(sentence, engToAno) {
+  if (!engToAno) return sentence; // fallback
+
   let words = sentence.toLowerCase().replace(/[?!.]/g, "").split(/\s+/);
 
   // Convert each word using dictionary, flatten multi-word translations
@@ -30,7 +23,7 @@ export function englishToAnorcan(sentence) {
     })
     .flat();
 
-  // VSO: swap first two words if sentence has at least 3 words
+  // VSO: if at least 3 words, swap first two (SVO → VSO)
   if (converted.length >= 3) {
     const [subj, verb, ...obj] = converted;
     if (engToAno[verb]) {
@@ -38,10 +31,10 @@ export function englishToAnorcan(sentence) {
     }
   }
 
-  // Apply negation "ta" before verb if present
+  // Negation "ta" before verbs
   for (let i = 0; i < converted.length; i++) {
     if (converted[i] === "ta" && converted[i + 1]) {
-      converted[i] = "ta"; // stays in place
+      converted[i] = "ta"; // stays
     }
   }
 
@@ -54,13 +47,18 @@ export function englishToAnorcan(sentence) {
 }
 
 /**
- * Translate Anorcan sentence to English
- * Handles:
- * - Multi-word translations (like "tafi rak" → "love")
- * - Particles
- * - VSO → SVO restoration
+ * Anorcan → English translation
+ * @param {string} sentence - Anorcan sentence
+ * @param {object} engToAno - Loaded dictionary object
+ * @returns {string} English translation
  */
-export function anorcanToEnglish(sentence) {
+export function anorcanToEnglish(sentence, engToAno) {
+  if (!engToAno) return sentence;
+
+  const anoToEng = Object.fromEntries(
+    Object.entries(engToAno).map(([k, v]) => [v, k])
+  );
+
   let words = sentence.toLowerCase().replace(/[?!.]/g, "").split(/\s+/);
 
   // Remove question marker "na" at end
@@ -68,14 +66,13 @@ export function anorcanToEnglish(sentence) {
 
   let converted = [];
 
-  // Map Anorcan → English, handle multi-word translations
   for (let i = 0; i < words.length; i++) {
-    // Handle "tafi rak" → "love"
+    // Multi-word translation: "tafi rak" → "love"
     if (words[i] === "tafi" && words[i + 1] === "rak") {
       converted.push("love");
-      i++; // skip next word
+      i++; // skip next
     } 
-    // Keep grammar particles as-is
+    // Keep particles as-is
     else if (particles.includes(words[i])) {
       converted.push(words[i]);
     } 
@@ -94,4 +91,29 @@ export function anorcanToEnglish(sentence) {
   }
 
   return converted.join(" ");
+}
+
+/**
+ * Load all dictionary batches dynamically from /public/data
+ * @param {number} batches - Number of JSON batches to load
+ * @returns {Promise<{engToAno: object, anoToEng: object}>}
+ */
+export async function loadDictionaries(batches = 10) {
+  let engToAno = {};
+
+  for (let i = 1; i <= batches; i++) {
+    const res = await fetch(`/data/engToAno_batch${i}.json`);
+    if (res.ok) {
+      const batch = await res.json();
+      engToAno = { ...engToAno, ...batch };
+    } else {
+      console.warn(`Failed to load batch ${i}`);
+    }
+  }
+
+  const anoToEng = Object.fromEntries(
+    Object.entries(engToAno).map(([k, v]) => [v, k])
+  );
+
+  return { engToAno, anoToEng };
 }
