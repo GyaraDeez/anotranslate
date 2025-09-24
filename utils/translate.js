@@ -56,32 +56,38 @@ export function englishToAnorcan(sentence) {
   return converted.join(" ");
 }
 
-export function anorcanToEnglish(sentence) {
+export function englishToAnorcan(sentence) {
   let words = sentence.toLowerCase().replace(/[?!.]/g, "").split(/\s+/);
 
-  // Remove question marker "na" if present
-  if (words[words.length - 1] === "na") words.pop();
+  // Convert each word using dictionary, flatten multi-word translations
+  let converted = words
+    .map((w) => {
+      const translation = engToAno[w];
+      if (!translation) return w;
+      return translation.includes(" ") ? translation.split(" ") : translation;
+    })
+    .flat();
 
-  // Map Anorcan → English, handle multi-word like "tafi rak" → "love"
-  let converted = [];
-  for (let i = 0; i < words.length; i++) {
-    if (words[i] === "tafi" && words[i + 1] === "rak") {
-      converted.push("love");
-      i++; // skip next
-    } else if (particles.includes(words[i])) {
-      converted.push(words[i]); // leave particles as-is
-    } else {
-      converted.push(anoToEng[words[i]] || words[i]);
+  // VSO transformation for sentences with at least 3 words
+  if (converted.length >= 3) {
+    const [subj, verb, ...obj] = converted;
+    if (engToAno[verb]) {
+      converted = [verb, subj, ...obj];
     }
   }
 
-  // Restore SVO from VSO if applicable
-  if (converted.length >= 3) {
-    const [verb, subj, ...obj] = converted;
-    if (anoToEng[verb] && !particles.includes(verb)) {
-      converted = [subj, verb, ...obj];
+  // Negation "ta" before verbs
+  for (let i = 0; i < converted.length; i++) {
+    if (converted[i] === "ta" && converted[i + 1]) {
+      converted[i] = "ta"; // stays as-is
     }
+  }
+
+  // Add question marker "na"
+  if (sentence.trim().endsWith("?") && !converted.includes("na")) {
+    converted.push("na");
   }
 
   return converted.join(" ");
 }
+
