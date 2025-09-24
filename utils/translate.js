@@ -30,10 +30,10 @@ export function englishToAnorcan(sentence) {
       let base = w;
 
       // Strip plural 's' for nouns if base exists
-      if (w.endsWith("s") && nouns.includes(w.slice(0, -1))) {
+      if (w.endsWith("s") && Object.keys(dictionary).includes(w.slice(0, -1))) {
         base = w.slice(0, -1);
       }
-      // Strip 's' for 3rd person singular verbs if base exists
+      // Strip 's' for 3rd person singular verbs
       else if (w.endsWith("s") && dictionary[w.slice(0, -1)]) {
         base = w.slice(0, -1);
       }
@@ -54,11 +54,12 @@ export function englishToAnorcan(sentence) {
     }
   }
 
-  // VSO: if sentence has 3+ words
-  if (converted.length >= 3) {
-    const [subj, verb, ...obj] = converted;
-    if (dictionary[verb]) {
-      converted = [verb, subj, ...obj];
+  // VSO: find first verb and move it to start
+  for (let i = 0; i < converted.length; i++) {
+    if (Object.values(dictionary).includes(converted[i]) && Object.keys(dictionary).includes(words[i]) && ["be","exist","like","love","eat","drink","go","come","do","make","want","need","give","take","say","speak","know","see","hear","sleep","think","feel","walk","live","stay"].includes(words[i])) {
+      const verb = converted.splice(i, 1)[0];
+      converted.unshift(verb);
+      break;
     }
   }
 
