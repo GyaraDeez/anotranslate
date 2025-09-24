@@ -1,15 +1,23 @@
 import { engToAno, anoToEng } from "./dictionary";
 
-// List of adjectives (for noun-adjective swap)
+// List of adjectives (optional, currently not used to preserve round-trip order)
 const adjectives = [
   "big","small","good","bad","new","old","hot","cold","long","short",
   "strong","weak","peaceful","happy","sad","hard","soft","light","heavy",
   "bright","dark","thick","thin","sharp","round","flat","smooth"
 ];
 
-// Grammar particles for reference
+// Grammar particles
 const particles = ["na","ta","ya","kae","ni","de","sa","ma","to","ku"];
 
+/**
+ * Translate English sentence to Anorcan
+ * Handles:
+ * - Multi-word translations (like "love" → "tafi rak")
+ * - VSO order (verbs before subject)
+ * - Negation "ta" before verbs
+ * - Question marker "na"
+ */
 export function englishToAnorcan(sentence) {
   let words = sentence.toLowerCase().replace(/[?!.]/g, "").split(/\s+/);
 
@@ -22,17 +30,7 @@ export function englishToAnorcan(sentence) {
     })
     .flat();
 
-  // Move adjectives after nouns
-  for (let i = 0; i < converted.length - 1; i++) {
-    const engWord = Object.keys(engToAno).find((k) => engToAno[k] === converted[i]);
-    const engNext = Object.keys(engToAno).find((k) => engToAno[k] === converted[i + 1]);
-    if (adjectives.includes(engWord) && engNext && !adjectives.includes(engNext)) {
-      [converted[i], converted[i + 1]] = [converted[i + 1], converted[i]];
-      i++; // skip next to avoid double swap
-    }
-  }
-
-  // Simple VSO: if at least 3 words, swap first two (SVO → VSO)
+  // VSO: swap first two words if sentence has at least 3 words
   if (converted.length >= 3) {
     const [subj, verb, ...obj] = converted;
     if (engToAno[verb]) {
@@ -43,12 +41,11 @@ export function englishToAnorcan(sentence) {
   // Apply negation "ta" before verb if present
   for (let i = 0; i < converted.length; i++) {
     if (converted[i] === "ta" && converted[i + 1]) {
-      converted[i] = "ta";
-      converted[i + 1] = converted[i + 1]; // keep verb next
+      converted[i] = "ta"; // stays in place
     }
   }
 
-  // Add "na" if the original sentence was a question
+  // Add question marker "na" if sentence ends with "?"
   if (sentence.trim().endsWith("?") && !converted.includes("na")) {
     converted.push("na");
   }
@@ -56,38 +53,45 @@ export function englishToAnorcan(sentence) {
   return converted.join(" ");
 }
 
-export function englishToAnorcan(sentence) {
+/**
+ * Translate Anorcan sentence to English
+ * Handles:
+ * - Multi-word translations (like "tafi rak" → "love")
+ * - Particles
+ * - VSO → SVO restoration
+ */
+export function anorcanToEnglish(sentence) {
   let words = sentence.toLowerCase().replace(/[?!.]/g, "").split(/\s+/);
 
-  // Convert each word using dictionary, flatten multi-word translations
-  let converted = words
-    .map((w) => {
-      const translation = engToAno[w];
-      if (!translation) return w;
-      return translation.includes(" ") ? translation.split(" ") : translation;
-    })
-    .flat();
+  // Remove question marker "na" at end
+  if (words[words.length - 1] === "na") words.pop();
 
-  // VSO transformation for sentences with at least 3 words
+  let converted = [];
+
+  // Map Anorcan → English, handle multi-word translations
+  for (let i = 0; i < words.length; i++) {
+    // Handle "tafi rak" → "love"
+    if (words[i] === "tafi" && words[i + 1] === "rak") {
+      converted.push("love");
+      i++; // skip next word
+    } 
+    // Keep grammar particles as-is
+    else if (particles.includes(words[i])) {
+      converted.push(words[i]);
+    } 
+    // Map using dictionary
+    else {
+      converted.push(anoToEng[words[i]] || words[i]);
+    }
+  }
+
+  // Restore SVO from VSO if possible
   if (converted.length >= 3) {
-    const [subj, verb, ...obj] = converted;
-    if (engToAno[verb]) {
-      converted = [verb, subj, ...obj];
+    const [verb, subj, ...obj] = converted;
+    if (anoToEng[verb] && !particles.includes(verb)) {
+      converted = [subj, verb, ...obj];
     }
-  }
-
-  // Negation "ta" before verbs
-  for (let i = 0; i < converted.length; i++) {
-    if (converted[i] === "ta" && converted[i + 1]) {
-      converted[i] = "ta"; // stays as-is
-    }
-  }
-
-  // Add question marker "na"
-  if (sentence.trim().endsWith("?") && !converted.includes("na")) {
-    converted.push("na");
   }
 
   return converted.join(" ");
 }
-
