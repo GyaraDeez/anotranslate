@@ -1,59 +1,52 @@
 import { engToAno, anoToEng } from "./dictionary";
 
-// Helper: check if a word is an adjective
+// Optional: basic adjectives (we won't swap yet to keep it safe)
 const adjectives = ["big", "small", "good", "bad"];
 
 export function englishToAnorcan(sentence) {
   let words = sentence.toLowerCase().replace(/[?!.]/g, "").split(/\s+/);
 
-  // Handle "I love" → "ima tafi rak"
-  if (words.includes("love")) {
-    words = words.map(w => (w === "love" ? "more like" : w));
-  }
+  // Handle "love" → "tafi rak"
+  words = words.map((w) => (w === "love" ? ["tafi", "rak"] : w)).flat();
 
-  // Convert each word with dictionary
-  let converted = words.map(w => engToAno[w] || w);
+  // Convert each word using dictionary
+  let converted = words.map((w) => engToAno[w] || w);
 
-  // Simple heuristic for SVO → VSO
-  // English: I eat food → Anorcan: eat I food
+  // Apply simple VSO: if at least 3 words, swap first two (SVO → VSO)
   if (converted.length >= 3) {
     const [subj, verb, ...obj] = converted;
     if (engToAno[verb]) {
-      converted = [engToAno[verb], engToAno[subj] || subj, ...obj];
+      converted = [verb, subj, ...obj];
     }
   }
 
-  // Negation: "not eat" → "ta ese"
-  converted = converted.map((w, i) => {
-    if (w === "ta" && converted[i + 1]) {
-      return "ta " + converted[i + 1];
-    }
-    return w;
-  });
-
-  // Move adjectives after nouns
-  for (let i = 0; i < converted.length - 1; i++) {
-    if (adjectives.includes(anoToEng[converted[i]])) {
-      // swap
-      [converted[i], converted[i - 1]] = [converted[i - 1], converted[i]];
-    }
-  }
-
-  let result = converted.join(" ");
-
-  // Add "na" if it’s a question
+  // Add "na" if the sentence was a question
   if (sentence.trim().endsWith("?")) {
-    result += " na";
+    converted.push("na");
   }
 
-  return result.trim();
+  return converted.join(" ");
 }
 
 export function anorcanToEnglish(sentence) {
   let words = sentence.toLowerCase().replace(/[?!.]/g, "").split(/\s+/);
-  let converted = words.map(w => anoToEng[w] || w);
 
-  // Fix VSO back to SVO if possible
+  // Remove "na" if present
+  if (words[words.length - 1] === "na") words.pop();
+
+  // Map words back to English
+  let converted = [];
+  for (let i = 0; i < words.length; i++) {
+    // Handle tafi rak → love
+    if (words[i] === "tafi" && words[i + 1] === "rak") {
+      converted.push("love");
+      i++; // skip next
+    } else {
+      converted.push(anoToEng[words[i]] || words[i]);
+    }
+  }
+
+  // VSO → SVO
   if (converted.length >= 3) {
     const [verb, subj, ...obj] = converted;
     if (anoToEng[verb]) {
@@ -61,14 +54,5 @@ export function anorcanToEnglish(sentence) {
     }
   }
 
-  // Handle "tafi rak" → "love"
-  for (let i = 0; i < converted.length; i++) {
-    if (converted[i] === "more" && converted[i + 1] === "like") {
-      converted[i] = "love";
-      converted.splice(i + 1, 1);
-    }
-  }
-
-  let result = converted.join(" ");
-
-  // Add
+  return converted.join(" ");
+}
